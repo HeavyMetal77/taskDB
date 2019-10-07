@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -46,6 +46,42 @@ public class MainServlet extends HttpServlet {
             }
             writer.write("\n");
         }
+
+
+
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        //получение данных через ResultSet без JSON
+        PrintWriter writer2 = resp.getWriter();
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/sqlcmd",
+                    "sqlcmd", "sqlcmd");
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * from contact");
+            ResultSetMetaData metadata = resultSet.getMetaData();
+            int columnCount = metadata.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                writer2.print(metadata.getColumnName(i) + " \t");
+            }
+            writer.println();
+            while (resultSet.next()) {
+                String row = "";
+                for (int i = 1; i <= columnCount; i++) {
+                    row += resultSet.getString(i) + " \t";
+                }
+                writer2.println();
+                writer2.print(row);
+
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private String getAction(HttpServletRequest req) {
